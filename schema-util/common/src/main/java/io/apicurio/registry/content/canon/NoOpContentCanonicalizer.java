@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * A canonicalizer that passes through the content unchanged.
  */
-public class NoOpContentCanonicalizer implements ContentCanonicalizer {
+public class NoOpContentCanonicalizer extends BaseContentCanonicalizer {
 
     public static final NoOpContentCanonicalizer INSTANCE = new NoOpContentCanonicalizer();
 
@@ -15,8 +15,8 @@ public class NoOpContentCanonicalizer implements ContentCanonicalizer {
      * @see ContentCanonicalizer#canonicalize(TypedContent, Map)
      */
     @Override
-    public TypedContent canonicalize(TypedContent content, Map<String, TypedContent> resolvedReferences) {
+    protected TypedContent doCanonicalize(TypedContent content,
+            Map<String, TypedContent> refs) throws ContentCanonicalizationException {
         return content;
     }
-
 }

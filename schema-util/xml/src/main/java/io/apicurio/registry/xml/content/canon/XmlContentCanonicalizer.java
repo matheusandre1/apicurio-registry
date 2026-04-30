@@ -2,6 +2,8 @@ package io.apicurio.registry.xml.content.canon;
 
 import io.apicurio.registry.content.ContentHandle;
 import io.apicurio.registry.content.TypedContent;
+import io.apicurio.registry.content.canon.BaseContentCanonicalizer;
+import io.apicurio.registry.content.canon.ContentCanonicalizationException;
 import io.apicurio.registry.content.canon.ContentCanonicalizer;
 import io.apicurio.registry.types.ContentTypes;
 import org.apache.xml.security.Init;
@@ -12,12 +14,13 @@ import org.apache.xml.security.parser.XMLParserException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
 import java.util.Map;
 
 /**
  * A common XML content canonicalizer.
  */
-public class XmlContentCanonicalizer implements ContentCanonicalizer {
+public class XmlContentCanonicalizer extends BaseContentCanonicalizer {
 
     private static ThreadLocal<Canonicalizer> xmlCanonicalizer = new ThreadLocal<Canonicalizer>() {
         @Override
@@ -38,7 +41,8 @@ public class XmlContentCanonicalizer implements ContentCanonicalizer {
      * @see ContentCanonicalizer#canonicalize(TypedContent, Map)
      */
     @Override
-    public TypedContent canonicalize(TypedContent content, Map<String, TypedContent> resolvedReferences) {
+    protected TypedContent doCanonicalize(TypedContent content,
+            Map<String, TypedContent> refs) throws ContentCanonicalizationException {
         try {
             Canonicalizer canon = xmlCanonicalizer.get();
             var out = new ByteArrayOutputStream(content.getContent().getSizeBytes());
@@ -46,7 +50,7 @@ public class XmlContentCanonicalizer implements ContentCanonicalizer {
             var canonicalized = out.toString(Canonicalizer.ENCODING);
             return TypedContent.create(ContentHandle.create(canonicalized), ContentTypes.APPLICATION_XML);
         } catch (CanonicalizationException | IOException | XMLParserException e) {
+            throw new ContentCanonicalizationException("Failed to canonicalize XML content", e);
         }
-        return content;
     }
 }
