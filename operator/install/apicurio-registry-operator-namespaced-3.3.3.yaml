@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/instance: apicurio-registry-operator
     app.kubernetes.io/name: apicurio-registry-operator
     app.kubernetes.io/part-of: apicurio-registry
-    app.kubernetes.io/version: 3.3.4-SNAPSHOT
+    app.kubernetes.io/version: 3.3.3
   name: apicurioregistries3.registry.apicur.io
 spec:
   group: registry.apicur.io
@@ -7277,11 +7277,11 @@ metadata:
     app.kubernetes.io/instance: apicurio-registry-operator
     app.kubernetes.io/name: apicurio-registry-operator
     app.kubernetes.io/part-of: apicurio-registry
-    app.kubernetes.io/version: 3.3.4-SNAPSHOT
+    app.kubernetes.io/version: 3.3.3
   name: apicurio-registry-operator
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   labels:
     app: apicurio-registry-operator
@@ -7289,8 +7289,8 @@ metadata:
     app.kubernetes.io/instance: apicurio-registry-operator
     app.kubernetes.io/name: apicurio-registry-operator
     app.kubernetes.io/part-of: apicurio-registry
-    app.kubernetes.io/version: 3.3.4-SNAPSHOT
-  name: apicurio-registry-operator-clusterrole
+    app.kubernetes.io/version: 3.3.3
+  name: apicurio-registry-operator-role
 rules:
 - apiGroups:
   - registry.apicur.io
@@ -7298,13 +7298,8 @@ rules:
   - apicurioregistries3
   - apicurioregistries3/status
   verbs:
-  - create
-  - delete
-  - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - apps
   resources:
@@ -7346,14 +7341,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - apiextensions.k8s.io
-  resourceNames:
-  - apicurioregistries3.registry.apicur.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
 - apiGroups:
   - networking.k8s.io
   resources:
@@ -7410,6 +7397,55 @@ rules:
   - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: apicurio-registry-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/instance: apicurio-registry-operator
+    app.kubernetes.io/name: apicurio-registry-operator
+    app.kubernetes.io/part-of: apicurio-registry
+    app.kubernetes.io/version: 3.3.3
+  name: apicurio-registry-operator-clusterrole-PLACEHOLDER_NAMESPACE
+rules:
+- apiGroups:
+  - registry.apicur.io
+  resources:
+  - apicurioregistries3
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resourceNames:
+  - apicurioregistries3.registry.apicur.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: apicurio-registry-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/instance: apicurio-registry-operator
+    app.kubernetes.io/name: apicurio-registry-operator
+    app.kubernetes.io/part-of: apicurio-registry
+    app.kubernetes.io/version: 3.3.3
+  name: apicurio-registry-operator-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: apicurio-registry-operator-role
+subjects:
+- kind: ServiceAccount
+  name: apicurio-registry-operator
+  namespace: PLACEHOLDER_NAMESPACE
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -7418,12 +7454,12 @@ metadata:
     app.kubernetes.io/instance: apicurio-registry-operator
     app.kubernetes.io/name: apicurio-registry-operator
     app.kubernetes.io/part-of: apicurio-registry
-    app.kubernetes.io/version: 3.3.4-SNAPSHOT
-  name: apicurio-registry-operator-clusterrolebinding
+    app.kubernetes.io/version: 3.3.3
+  name: apicurio-registry-operator-clusterrolebinding-PLACEHOLDER_NAMESPACE
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: apicurio-registry-operator-clusterrole
+  name: apicurio-registry-operator-clusterrole-PLACEHOLDER_NAMESPACE
 subjects:
 - kind: ServiceAccount
   name: apicurio-registry-operator
@@ -7438,8 +7474,8 @@ metadata:
     app.kubernetes.io/instance: apicurio-registry-operator
     app.kubernetes.io/name: apicurio-registry-operator
     app.kubernetes.io/part-of: apicurio-registry
-    app.kubernetes.io/version: 3.3.4-SNAPSHOT
-  name: apicurio-registry-operator-v3.3.4-snapshot
+    app.kubernetes.io/version: 3.3.3
+  name: apicurio-registry-operator-v3.3.3
   namespace: PLACEHOLDER_NAMESPACE
 spec:
   replicas: 1
@@ -7450,7 +7486,7 @@ spec:
       app.kubernetes.io/instance: apicurio-registry-operator
       app.kubernetes.io/name: apicurio-registry-operator
       app.kubernetes.io/part-of: apicurio-registry
-      app.kubernetes.io/version: 3.3.4-SNAPSHOT
+      app.kubernetes.io/version: 3.3.3
   template:
     metadata:
       labels:
@@ -7459,11 +7495,15 @@ spec:
         app.kubernetes.io/instance: apicurio-registry-operator
         app.kubernetes.io/name: apicurio-registry-operator
         app.kubernetes.io/part-of: apicurio-registry
-        app.kubernetes.io/version: 3.3.4-SNAPSHOT
+        app.kubernetes.io/version: 3.3.3
     spec:
       automountServiceAccountToken: true
       containers:
       - env:
+        - name: APICURIO_OPERATOR_WATCHED_NAMESPACES
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -7472,21 +7512,17 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: APICURIO_OPERATOR_WATCHED_NAMESPACES
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['olm.targetNamespaces']
         - name: QUARKUS_PROFILE
           value: prod
         - name: REGISTRY_APP_IMAGE
-          value: quay.io/apicurio/apicurio-registry:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry:3.3.3
         - name: REGISTRY_UI_IMAGE
-          value: quay.io/apicurio/apicurio-registry-ui:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry-ui:3.3.3
         - name: REGISTRY_GITOPS_SYNC_IMAGE
-          value: quay.io/apicurio/apicurio-registry-gitops-sync:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry-gitops-sync:3.3.3
         - name: REGISTRY_CONSOLE_PLUGIN_IMAGE
-          value: quay.io/apicurio/apicurio-registry-console-plugin:latest-snapshot
-        image: quay.io/apicurio/apicurio-registry-3-operator:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry-console-plugin:3.3.3
+        image: quay.io/apicurio/apicurio-registry-3-operator:3.3.3
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3
